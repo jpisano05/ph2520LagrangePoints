@@ -2,6 +2,7 @@ import numpy as np
 from tkinter import *
 from tkinter import ttk
 from scipy.optimize import fsolve
+import matplotlib
 
 m1 = 0
 m2 = 0
@@ -14,6 +15,8 @@ def collinear_lagrange(x, mu):
 #calculate lagrange points then update the drawing
 #this code was used as example for this: https://orbital-mechanics.space/the-n-body-problem/Lagrange-points-example.html
 def calculatePoints(m1, m2, R):
+    R = R * 1000
+    
     mu = m2 / (m1 + m2)
 
     L1 = fsolve(collinear_lagrange, 0.5, mu)[0] * R
@@ -47,12 +50,13 @@ def drawTwoBodySystem(m1, m2, R, L1, L2, L3, L4, L5):
     sizeDiff = np.log10(m1/m2)
     print(sizeDiff)
     relativeDistance = np.log10(R)
-    
+    maxScale = 1
+
     #solar mass relative
-    defaultRadius = 160
+    defaultRadius = 80
     
     #body 1
-    body1Radius = defaultRadius
+    body1Radius = defaultRadius * maxScale
     body1X = windowDimX/2
     body1Y = windowDimY/2
     
@@ -63,7 +67,7 @@ def drawTwoBodySystem(m1, m2, R, L1, L2, L3, L4, L5):
                        outline="orange", fill="yellow", width=2)
     
     #orbit
-    orbitRadius = (50 * relativeDistance)
+    orbitRadius = (50 * relativeDistance) * maxScale
     canvas.create_oval(body1X - (orbitRadius/2),
                        body1Y - (orbitRadius/2), 
                        body1X + (orbitRadius/2),
@@ -84,7 +88,7 @@ def drawTwoBodySystem(m1, m2, R, L1, L2, L3, L4, L5):
     
     #Lagrange Points
     PointRadius = 10
-    L1Scaled = (L1 / R) * (orbitRadius) / relativeDistance
+    L1Scaled = (L1 / R) * (orbitRadius / 3)
     print(L1Scaled)
     L1Position = body1X + L1Scaled
     L1Y = body2Y
@@ -94,9 +98,9 @@ def drawTwoBodySystem(m1, m2, R, L1, L2, L3, L4, L5):
                        L1Y + (PointRadius/2),  
                        outline="green", fill="red", width=2)
     
-    L2Scaled = (orbitRadius/8)
+    L2Scaled = (L2 / R) * (orbitRadius / 3)
     print(L2Scaled)
-    L2Position = body2X + L2Scaled
+    L2Position = body2X + (L2Scaled / 2)
     L2Y = body2Y
     canvas.create_oval(L2Position - (PointRadius/2),
                        L2Y - (PointRadius/2), 
@@ -104,9 +108,10 @@ def drawTwoBodySystem(m1, m2, R, L1, L2, L3, L4, L5):
                        L2Y + (PointRadius/2),  
                        outline="green", fill="red", width=2)
     
-    L3Scaled = body1X - (orbitRadius / 2) + (L3 / R) * 4
-    print(L1Scaled)
-    L3Position = L3Scaled
+    L3Scaled = (L3 / R) * (orbitRadius / 2)
+    print("L3:")
+    print(L3Scaled)
+    L3Position = body1X + L3Scaled
     L3Y = body2Y
     canvas.create_oval(L3Position - (PointRadius/2),
                        L3Y - (PointRadius/2), 
@@ -125,7 +130,23 @@ def drawTwoBodySystem(m1, m2, R, L1, L2, L3, L4, L5):
                        outline="green", fill="red", width=2)
     print(L4XScaled)
     
+    L5XScaled = (L5[0] / R) * (orbitRadius / 2)
+    L5XPosition = L5XScaled + body1X
+    L5YScaled = (L5[1] / R) * (orbitRadius / 2)
+    L5YPosition = L5YScaled + body1Y
+    canvas.create_oval(L5XPosition - (PointRadius/2),
+                       L5YPosition - (PointRadius/2), 
+                       L5XPosition + (PointRadius/2),
+                       L5YPosition + (PointRadius/2),  
+                       outline="green", fill="red", width=2)
+    print(L5XScaled)
     
+    #draw lines
+   # canvas.create_line()
+   
+def varUpdate(var1, var2):
+    print("Tyrig")
+    var1.set(var2)
 
 if __name__ == "__main__":
     #test for earth/sun system
@@ -149,7 +170,7 @@ if __name__ == "__main__":
     mass2 = StringVar(value="5.972e24")
     mass2_entry = ttk.Entry(mainframe, width = 15, textvariable = mass2)
     mass2_entry.grid(column = 2, row=2, sticky=W)
-    distance = StringVar(value="1.496e11")
+    distance = StringVar(value="1.496e8")
     distance_entry = ttk.Entry(mainframe, width = 15, textvariable = distance)
     distance_entry.grid(column = 2, row=3, sticky=W)
     
@@ -160,9 +181,27 @@ if __name__ == "__main__":
     ttk.Label(mainframe, text="Mass 1").grid(column=1, row=1, sticky=E)
     ttk.Label(mainframe, text="Mass 2").grid(column=1, row=2, sticky=E)
     ttk.Label(mainframe, text="Distance").grid(column=1, row=3, sticky=E)
-    ttk.Label(mainframe, text="kg").grid(column=3, row=1, sticky=E)
-    ttk.Label(mainframe, text="kg").grid(column=3, row=2, sticky=E)
-    ttk.Label(mainframe, text="m").grid(column=3, row=3, sticky=E)
+    
+    ttk.Label(mainframe, text="Unit Selection:").grid(column=1, row=5, sticky=E)
+    
+    massUnits = StringVar(value=["kg", "Solar Masses"])
+    massUnitList = Listbox(mainframe, listvariable=massUnits, height=2)
+    massUnitList.grid(column=1, row=6, sticky=E)
+
+    distanceUnits = StringVar(value=["km", "AU"])
+    distanceUnitList = Listbox(mainframe, listvariable=distanceUnits, height=2)
+    distanceUnitList.grid(column=2, row=6, stick=E)
+    
+    
+    massUnit = StringVar(value="kg")
+    distanceUnit = StringVar(value="km")
+    ttk.Label(mainframe, text=massUnit.get()).grid(column=3, row=1, sticky=E)
+    ttk.Label(mainframe, text=massUnit.get()).grid(column=3, row=2, sticky=E)
+    ttk.Label(mainframe, text=distanceUnit.get()).grid(column=3, row=3, sticky=E)
+    
+    print(massUnitList.curselection())
+    #massUnit.set(massUnits.get()[massUnitList.curselection()[0]])
+    massUnitList.bind('<<ListboxSelect>>', lambda e: print(massUnits.get()))
     
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)	
