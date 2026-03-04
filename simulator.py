@@ -175,88 +175,96 @@ def drawTwoBodySystem(m1, m2, R, r1, r2, L1, L2, L3, L4, L5):
     canvas.create_line(barycenterX + 10, barycenterY, barycenterX - 10, barycenterY, fill="red")
 
 if __name__ == "__main__":
-    #test for earth/sun system
+    #Starting values with Earth/Sun
     m1 = 1.989e30
     m2 = 5.972e24
     R = 1.496e8
-    
-    #pygame init
+
+    #Tkinter init
     root = Tk()
     root.title("Lagrange Point Simulator")
     root.geometry("1800x900")
-    
-    mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
-    mainframe.grid(column=0, row=0, stick=(N,W,E,S))
-    
+    root.configure(bg="gray20")
+
+    #Main frame
+    mainframe = Frame(root, bg="gray20", padx=10, pady=10)
+    mainframe.grid(column=0, row=0, sticky=(N,W,E,S))
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    #Input Frame
+    input_frame = ttk.LabelFrame(mainframe, text="Parameters", padding=10)
+    input_frame.grid(column=0, row=0, sticky=N+W, padx=10, pady=10)
+
+    #Mass 1
+    mass1 = StringVar(value="1.989e30")
+    mass1_row = ttk.Frame(input_frame)
+    mass1_row.pack(fill=X, pady=2)
+    ttk.Label(mass1_row, text="Mass 1:").pack(side=LEFT)
+    mass1_entry = ttk.Entry(mass1_row, width=15, textvariable=mass1)
+    mass1_entry.pack(side=LEFT, padx=5)
+    massUnit = StringVar(value="kg")
+    ttk.Label(mass1_row, textvariable=massUnit).pack(side=LEFT)
+
+    #Mass 2
+    mass2 = StringVar(value="5.972e24")
+    mass2_row = ttk.Frame(input_frame)
+    mass2_row.pack(fill=X, pady=2)
+    ttk.Label(mass2_row, text="Mass 2:").pack(side=LEFT)
+    mass2_entry = ttk.Entry(mass2_row, width=15, textvariable=mass2)
+    mass2_entry.pack(side=LEFT, padx=5)
+    ttk.Label(mass2_row, textvariable=massUnit).pack(side=LEFT)
+
+    #Distance
+    distance = StringVar(value="1.496e8")
+    distance_row = ttk.Frame(input_frame)
+    distance_row.pack(fill=X, pady=2)
+    ttk.Label(distance_row, text="Distance:").pack(side=LEFT)
+    distance_entry = ttk.Entry(distance_row, width=15, textvariable=distance)
+    distance_entry.pack(side=LEFT, padx=5)
+    distanceUnit = StringVar(value="km")
+    ttk.Label(distance_row, textvariable=distanceUnit).pack(side=LEFT)
+
+    #Unit Selection
+    unit_frame = ttk.Frame(input_frame)
+    unit_frame.pack(fill=X, pady=5)
+    ttk.Label(unit_frame, text="Mass Unit:").pack(side=LEFT)
+    massUnitCombo = ttk.Combobox(unit_frame, values=["kg", "Solar Masses"], state="readonly", textvariable=massUnit, width=12)
+    massUnitCombo.pack(side=LEFT, padx=5)
+
+    ttk.Label(unit_frame, text="Distance Unit:").pack(side=LEFT, padx=(10, 0))
+    distanceUnitCombo = ttk.Combobox(unit_frame, values=["km", "AU"], state="readonly", textvariable=distanceUnit, width=12)
+    distanceUnitCombo.pack(side=LEFT, padx=5)
+
+    #Calculate Button
+    ttk.Button(input_frame, text="Calculate",
+               command=lambda: calculatePoints(
+                   float(mass1.get()) * (1.989e30 if massUnit.get() == "Solar Masses" else 1),
+                   float(mass2.get()) * (1.989e30 if massUnit.get() == "Solar Masses" else 1),
+                   float(distance.get()) * (1.496e8 if distanceUnit.get() == "AU" else 1),
+               )).pack(pady=10)
+
+    #Canvas
     windowDimX = 1200
     windowDimY = 800
-    canvas = Canvas(mainframe, width=windowDimX, height=windowDimY, bg="black")
-    
-    mass1 = StringVar(value="1.989e30")
-    mass1_entry = ttk.Entry(mainframe, width = 15, textvariable = mass1)
-    mass1_entry.grid(column = 2, row=1, sticky=W)
-    mass2 = StringVar(value="5.972e24")
-    mass2_entry = ttk.Entry(mainframe, width = 15, textvariable = mass2)
-    mass2_entry.grid(column = 2, row=2, sticky=W)
-    distance = StringVar(value="1.496e8")
-    distance_entry = ttk.Entry(mainframe, width = 15, textvariable = distance)
-    distance_entry.grid(column = 2, row=3, sticky=W)
-    
-    ttk.Label(mainframe, text="Mass 1").grid(column=1, row=1, sticky=E)
-    ttk.Label(mainframe, text="Mass 2").grid(column=1, row=2, sticky=E)
-    ttk.Label(mainframe, text="Distance").grid(column=1, row=3, sticky=E)
-    
-    ttk.Label(mainframe, text="Unit Selection:").grid(column=1, row=5, sticky=E)
-    
-    massUnit = StringVar(value="kg")
-    distanceUnit = StringVar(value="km")
+    canvas_frame = ttk.Frame(mainframe)
+    canvas_frame.grid(column=1, row=0, sticky=N+S+E+W, padx=10, pady=10)
+    mainframe.columnconfigure(1, weight=1)
+    mainframe.rowconfigure(0, weight=1)
 
-    massUnitCombo = ttk.Combobox(mainframe, values=["kg", "Solar Masses"], state="readonly", textvariable=massUnit)
-    massUnitCombo.grid(column=1, row=6, sticky=E)
+    canvas = Canvas(canvas_frame, width=windowDimX, height=windowDimY, bg="black")
+    canvas.pack(fill=BOTH, expand=True)
 
-    distanceUnitCombo = ttk.Combobox(mainframe, values=["km", "AU"], state="readonly", textvariable=distanceUnit)
-    distanceUnitCombo.grid(column=2, row=6, sticky=E)
-
-    massUnitLabel1 = ttk.Label(mainframe, textvariable=massUnit)
-    massUnitLabel1.grid(column=3, row=1, sticky=E)
-
-    massUnitLabel2 = ttk.Label(mainframe, textvariable=massUnit)
-    massUnitLabel2.grid(column=3, row=2, sticky=E)
-
-    distanceUnitLabel = ttk.Label(mainframe, textvariable=distanceUnit)
-    distanceUnitLabel.grid(column=3, row=3, sticky=E)
-    
-    calculatePoints(m1, m2, R)
-    
-    ttk.Button(mainframe, text="Calculate",
-            command=lambda: calculatePoints(
-                float(mass1.get()) * (1.989e30 if massUnit.get() == "Solar Masses" else 1),
-                float(mass2.get()) * (1.989e30 if massUnit.get() == "Solar Masses" else 1),
-                float(distance.get()) * (1.496e8 if distanceUnit.get() == "AU" else 1),
-            )
-            ).grid(column=2, row=4, sticky=E)
-    
-    root.columnconfigure(0, weight=1)
-    root.rowconfigure(0, weight=1)	
-    #mainframe.columnconfigure(2, weight=1)
-    for child in mainframe.winfo_children(): 
-        child.grid_configure(padx=5, pady=5)
-    mass1_entry.focus()
-    
-    #style
+    #Styling
     style = ttk.Style()
-    style.configure("My.TFrame", background="gray")  
-    mainframe.configure(style="My.TFrame")
-    
+    style.theme_use('clam')
+    style.configure("TLabel", foreground="white", background="gray20", font=("Helvetica", 12))
+    style.configure("TEntry", font=("Helvetica", 12))
+    style.configure("TButton", font=("Helvetica", 12), padding=6)
+    input_frame = ttk.LabelFrame(mainframe, text="Parameters", padding=10)
+    #input_frame.configure(style="TLabelFrame")
+
+    mass1_entry.focus()
+    calculatePoints(m1, m2, R)
+
     root.mainloop()
-    
-    #test for earth/sun system
-    #m1 = 1.989e30
-    #m2 = 5.972e24
-    #R = 1.496e11
-    
-    #L1, L2, L3 = calculatePoints(m1, m2, R)
-    
-    #print(L1)
-    #print(L2)
-    #print(L3)
