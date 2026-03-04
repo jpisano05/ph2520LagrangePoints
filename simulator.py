@@ -23,9 +23,14 @@ def calculatePoints(m1, m2, R):
     r1 = mu * R
     r2 = (1 - mu) * R
 
-    L1 = fsolve(collinear_lagrange, 0.5 - mu, mu)[0] * R
-    L2 = fsolve(collinear_lagrange, 1.1 - mu, mu)[0] * R
-    L3 = fsolve(collinear_lagrange, -1.0 - mu, mu)[0] * R
+    if mu < 0.01:  # use analytical for small mass ratios
+        L1 = (1 - (mu/3)**(1/3) - mu) * R
+        L2 = (1 + (mu/3)**(1/3) - mu) * R
+        L3 = (-1 - 5/12*mu) * R
+    else:  # use fsolve for larger mass ratios
+        L1 = fsolve(collinear_lagrange, 0.5 - mu, mu)[0] * R
+        L2 = fsolve(collinear_lagrange, 1.1 - mu, mu)[0] * R
+        L3 = fsolve(collinear_lagrange, -1.0 - mu, mu)[0] * R
 
     L4 = [(0.5 - mu) * R, (np.sqrt(3) / 2 * R)]
     L5 = [(0.5 - mu) * R, -(np.sqrt(3) / 2) * R]
